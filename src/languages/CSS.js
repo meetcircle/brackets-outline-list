@@ -1,6 +1,8 @@
 define(function (require, exports, module) {
     "use strict";
 
+    var Editor = brackets.getModule("editor/Editor").Editor;
+
     function _getTypeClass(name) {
         var classes = {
             "#": "id",
@@ -11,8 +13,18 @@ define(function (require, exports, module) {
         return " outline-entry-css-" + (classes[name[0]] || "tag");
     }
 
-    function _createListEntry(name, line, ch) {
+    function _createListEntry(name, indent, line, ch) {
         var $elements = [];
+        if (indent) {
+            var $indentation = $(document.createElement("span"));
+            $indentation.addClass("outline-entry-indent");
+            var interpunct = "";
+            for (var i = 0; i < indent; i++) {
+                interpunct += "·";
+            }
+            $indentation.text(interpunct);
+            $elements.push($indentation);
+        }
         var $name = $(document.createElement("span"));
         var typeClass = _getTypeClass(name);
         $name.addClass("outline-entry-name");
@@ -27,6 +39,19 @@ define(function (require, exports, module) {
         };
     }
 
+    function _getIndentationLevel(whitespace) {
+        if (!whitespace) {
+            return 0;
+        }
+        var indentSize = Editor.getUseTabChar() ? Editor.getTabSize() : Editor.getSpaceUnits();
+        var tmpSpaces = "";
+        for (var i = 0; i < indentSize; i++) {
+            tmpSpaces += " ";
+        }
+        whitespace = whitespace.replace(/\t/g, tmpSpaces);
+        return (whitespace.length / indentSize) || 0;
+    }
+
     /**
      * Create the entry list of functions language dependent.
      * @param   {Array} text Documents text with normalized line endings.
@@ -34,7 +59,7 @@ define(function (require, exports, module) {
      */
     function getOutlineList(text) {
         var lines = text.replace(/(\n*)\{/g, "{$1").split("\n");
-        var regex =  /([^\r\n,{}]+)((?=[^}]*\{)|\s*\{)/g;
+        var regex = /^([ \t]*)([^\d{][^{]+){$/g;
         var result = [];
         lines.forEach(function (line, index) {
             if (line.length > 1000) {
@@ -42,8 +67,9 @@ define(function (require, exports, module) {
             }
             var match = regex.exec(line);
             while (match !== null) {
-                var name = match[1].trim();
-                result.push(_createListEntry(name, index, line.length));
+                var whitespace = match[1];
+                var name = match[2].trim();
+                result.push(_createListEntry(name, _getIndentationLevel(whitespace), index, line.length));
                 match = regex.exec(line);
             }
         });
