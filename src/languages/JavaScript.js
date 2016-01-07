@@ -3,7 +3,7 @@ define(function (require, exports, module) {
 
     var unnamedPlaceholder = "function";
 
-    function _getVisibilityClass(name, isGenerator, isPrivate) {
+    function _getVisibilityClass (name, isGenerator, isPrivate, isImport) {
         var visClass = "";
         if (isGenerator) {
             visClass = " outline-entry-generator";
@@ -12,27 +12,32 @@ define(function (require, exports, module) {
         if (name === unnamedPlaceholder) {
             visClass += " outline-entry-unnamed";
         } else {
-            visClass += " outline-entry-" + (name[0] === "_" || isPrivate ? "private" : "public");
+            visClass += " outline-entry-" + (isPrivate ? "private" : "public");
         }
+        
+        if (isImport) {
+            visClass = " outline-entry-js-import";
+        }
+        
         return visClass;
     }
 
-    function _createListEntry(name, isGenerator, args, line, ch, depth, isPrivate) {
+    function _createListEntry (name, isGenerator, args, line, ch, depth, isPrivate, isImport) {
 
         depth = depth || 0;
 
-        var prefix = '';
+        var prefix = "";
         for (var i = 2; i < depth; i++) {
-            prefix += '&nbsp; &nbsp; ';
+            prefix += "&nbsp; &nbsp; ";
         }
 
         var displayName = name;
 
-        if (displayName.indexOf('class ') != -1) {
-            displayName = "<strong>" + displayName.split('class ')[1].split(' extends')[0] + "</strong>";
+        if (displayName.indexOf("class ") != -1) {
+            displayName = "<strong>" + displayName.split("class ")[1].split(" extends")[0] + "</strong>";
             prefix = prefix;
             isGenerator = true;
-        } else if (depth <= 2 && name.indexOf('export ') == -1) {
+        } else if (depth <= 2 && name.indexOf("export ") == -1) {
             isPrivate = true;
         }
 
@@ -52,12 +57,12 @@ define(function (require, exports, module) {
             name: displayName,
             line: line,
             ch: ch,
-            classes: "outline-entry-js outline-entry-icon" + _getVisibilityClass(name, isGenerator, isPrivate),
+            classes: "outline-entry-js outline-entry-icon" + _getVisibilityClass(name, isGenerator, isPrivate, isImport),
             $html: $elements
         };
     }
 
-    function _surroundArgs(args) {
+    function _surroundArgs (args) {
         if (args[0] !== "(") {
             args = "(" + args + ")";
         }
@@ -72,7 +77,7 @@ define(function (require, exports, module) {
         var i;
 
         for (i = 0; i < lines.length; i++) {
-            var line = lines[i].replace(/{/g,"<block linenum=\"" + i + "\" linelen=\"" + lines[i].length + "\">")
+            var line = lines[i].replace(/{/g,"<block linenum=\"" + i + "\" linelen=\"" + lines[i].length + "\">");
             lines[i] = line.trim();
         }
 
@@ -91,7 +96,7 @@ define(function (require, exports, module) {
         text = text.replace(/\t/g, "");
 
 
-        var div = document.createElement('div');
+        var div = document.createElement("div");
         div.innerHTML = "<block>" + text + "</block>";
 
         return div;
@@ -138,7 +143,7 @@ define(function (require, exports, module) {
 
                         var name = sib.nodeValue.trim();
 
-                        if (name && name != "if" && name != "for" && name != "else" && name != "else if" && name != "switch" && name != "while") {
+                        if (name && name != "if" && name != "for" && name != "else" && name != "else if" && name != "switch" && name != "while" && name != "catch") {
                             var lineNum = child.attributes ? parseInt(child.getAttribute("linenum")) : 0;
                             var lineLen = child.attributes ? parseInt(child.getAttribute("linelen")) : 0;
                             var depth = 0;
@@ -195,7 +200,7 @@ define(function (require, exports, module) {
 
     }
 
-    function getOutlineList (text, showArguments, showUnnamed) {
+    function getOutlineList (text) {
 
         var results = getImports(text);
 

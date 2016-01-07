@@ -149,6 +149,11 @@
     font-family: sans-serif;
 }
 
+.outline-entry-js-import:before {
+    color: #f4229b;
+    content: "\f10f";
+}
+
 .outline-entry-js.outline-entry-generator {
     padding-top: 10px;
 }
