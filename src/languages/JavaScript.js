@@ -181,8 +181,8 @@ define(function (require, exports, module) {
 
             if (line.indexOf("import ") === 0) {
 
-                var name = line.split("import")[1].split(" from")[0];
-                var file = "(" + line.split("from ")[1] + ")";
+                var name = line.split("import")[1].split(" from")[0].trim();
+                var file = " (" + line.split("'").join(" ").split("from ")[1].trim() + ")";
 
                 results.push(_createListEntry(name, false, file, i, lines[i].length, 0, true));
 
