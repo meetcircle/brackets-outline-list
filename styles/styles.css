@@ -149,10 +149,20 @@
     font-family: sans-serif;
 }
 
+.outline-entry-js.outline-entry-generator {
+    padding-top: 10px;
+}
+
 .outline-entry-js.outline-entry-generator:before {
     color: #f4229b;
     content: "\f43d";
     font-family: Ionicons;
+}
+
+.outline-entry-js strong {
+    color: #fff;
+    line-height: 150%;
+    font-size: 15px;
 }
 
 
