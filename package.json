@@ -1,6 +1,6 @@
 {
   "name": "meetcircle.outline-list",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "title": "Brackets Outline List - ES6",
   "description": "Displays a list of the functions or definitions in the currently opened document. Works with JavaScript, CoffeeScript, CSS, SCSS, LESS, XML, HTML, SVG, Markdown and PHP. Supports JS ES6 Class notation.",
   "engines": {
