@@ -14,11 +14,11 @@ define(function (require, exports, module) {
         } else {
             visClass += " outline-entry-" + (isPrivate ? "private" : "public");
         }
-        
+
         if (isImport) {
             visClass = " outline-entry-js-import";
         }
-        
+
         return visClass;
     }
 
@@ -58,7 +58,8 @@ define(function (require, exports, module) {
             line: line,
             ch: ch,
             classes: "outline-entry-js outline-entry-icon" + _getVisibilityClass(name, isGenerator, isPrivate, isImport),
-            $html: $elements
+            $html: $elements,
+            args: args
         };
     }
 
@@ -190,7 +191,7 @@ define(function (require, exports, module) {
                 var file = " (" + line.split("'").join(" ").split("from ")[1].trim() + ")";
                 file = file.replace(";","");
 
-                results.push(_createListEntry(name, false, file, i, lines[i].length, 0, true));
+                results.push(_createListEntry(name, false, file, i, lines[i].length, 0, false, true));
 
             }
 

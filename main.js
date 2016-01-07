@@ -1,9 +1,11 @@
 define(function (require, exports, module) {
     "use strict";
 
-    var CommmandManager = brackets.getModule("command/CommandManager");
+    var CommandManager = brackets.getModule("command/CommandManager");
+    var Commands       = brackets.getModule("command/Commands");
     var Menus           = brackets.getModule("command/Menus");
     var DocumentManager = brackets.getModule("document/DocumentManager");
+    var ProjectManager = brackets.getModule("project/ProjectManager");
     var EditorManager   = brackets.getModule("editor/EditorManager");
     var Resizer         = brackets.getModule("utils/Resizer");
     var AppInit         = brackets.getModule("utils/AppInit");
@@ -57,6 +59,45 @@ define(function (require, exports, module) {
         currentEditor.focus();
     }
 
+    function loadFile(event) {
+
+        var file = event.data.file;
+
+        if (file) {
+
+            file = file.trim();
+            var absFile = '';
+
+            if (file.indexOf("/") == -1) {
+
+                var baseDir = ProjectManager.getProjectRoot();
+
+                file = "node_modules/" + file + "/";
+                absFile = baseDir.fullPath + file;
+
+                CommandManager.execute(Commands.FILE_OPEN_FOLDER, absFile);
+
+
+            } else {
+
+                var doc = DocumentManager.getCurrentDocument();
+
+                if (doc) {
+
+                    var f = doc.file;
+
+                    absFile = f._parentPath + file;
+
+                    if (absFile.indexOf(".js") == -1) absFile += ".js";
+
+                    CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN, {fullPath: absFile, paneId: "first-pane"});
+
+                }
+            }
+
+        }
+    }
+
     function updateOutline() {
         var doc = DocumentManager.getCurrentDocument();
         if (!doc) {
@@ -83,10 +124,18 @@ define(function (require, exports, module) {
             $entry.addClass("outline-entry");
             $entry.addClass(entry.classes);
             $entry.append(entry.$html);
-            $entry.click({
-                line: entry.line,
-                ch: entry.ch
-            }, goToLine);
+
+            if (entry.classes.indexOf('outline-entry-js-import') != -1) {
+                $entry.click({
+                    file: entry.args.split("(").join("").split(")").join("")
+                }, loadFile);
+            } else {
+                $entry.click({
+                    line: entry.line,
+                    ch: entry.ch
+                }, goToLine);
+            }
+
             $("#outline-list ul").append($entry);
         });
     }
@@ -165,7 +214,7 @@ define(function (require, exports, module) {
     _.each(prefs.getSettings(), function (status, key) {
         var commandName = prefix + "." + key;
         var commandString = Strings["COMMAND_" + key.toUpperCase()];
-        var command = CommmandManager.register(commandString, commandName, function () {
+        var command = CommandManager.register(commandString, commandName, function () {
             var checked = prefs.togglePref(commandName.split(".")[2]);
             command.setChecked(checked);
             updateOutline();
