@@ -1,14 +1,14 @@
 {
-  "name": "hirse.outline-list",
-  "version": "0.7.0",
-  "title": "Brackets Outline List",
+  "name": "meetcircle.outline-list",
+  "version": "0.8.0",
+  "title": "Brackets Outline List - ES6",
   "description": "Displays a list of the functions or definitions in the currently opened document. Works with JavaScript, CoffeeScript, CSS, SCSS, LESS, XML, HTML, SVG, Markdown and PHP. Now with Icons!",
   "engines": {
     "brackets": ">=1.4.0"
   },
   "homepage": "https://github.com/Hirse/brackets-outline-list",
   "repository": "Hirse/brackets-outline-list",
-  "author": "Jan Pilzer (https://github.com/Hirse)",
+  "author": "Jan Pilzer (https://github.com/Hirse), GG",
   "license": "MIT",
   "keywords": [
     "outline",
