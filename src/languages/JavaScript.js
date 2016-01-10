@@ -146,7 +146,9 @@ define(function (require, exports, module) {
         text = text.replace(/}/g,"</block>");
         text = text.replace(/\(/g,"<scope>").replace(/\)/g,"</scope>");
         text = text.replace(/\/\*/g,"<commentblock>").replace(/\/\*/g,"</commentblock>");
+        
         text = text.replace(/\t/g, "");
+        text = text.replace(/,/g,"<br />");
     
         //console.log(text);
         
