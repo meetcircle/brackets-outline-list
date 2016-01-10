@@ -121,6 +121,9 @@ define(function (require, exports, module) {
                     }
                 }
                 
+                line = line.replace(/<quote>(.*?)<\/quote>/g, "<quote></quote>");
+                line = line.replace(/\(\/(.*?)\//g, "(<regex></regex>");
+                
                 lines[i] = line;
                 
             }
@@ -129,6 +132,8 @@ define(function (require, exports, module) {
             lines[i] = line.trim();
             
         }
+        
+        
 
         i = lines.length;
 
@@ -143,7 +148,8 @@ define(function (require, exports, module) {
         text = text.replace(/\/\*/g,"<commentblock>").replace(/\/\*/g,"</commentblock>");
         text = text.replace(/\t/g, "");
     
-        console.log(text);
+        //console.log(text);
+        
         var div = document.createElement("div");
         div.innerHTML = "<block>" + text + "</block>";
 
@@ -165,7 +171,6 @@ define(function (require, exports, module) {
 
             if (child.nodeName == "BLOCK") {
 
-                console.log(child.getAttribute("linenum"));
                 var sib = child.previousSibling;
                 var foundScope = false;
 
@@ -192,8 +197,8 @@ define(function (require, exports, module) {
 
                         var args = [];
                         if (sib.nextSibling && sib.nextSibling.nodeName == "SCOPE") {
-                            if (sib.nextSibling.firstChild) {
-                                args = " (" + sib.nextSibling.firstChild.nodeValue + ")";
+                            if (sib.nextSibling.firstChild && sib.nextSibling.firstChild.nodeType === 3) {
+                                args = " (" + sib.nextSibling.firstChild.nodeValue.trim() + ")";
                             } else {
                                 args = " ()";
                             }
@@ -202,7 +207,7 @@ define(function (require, exports, module) {
                         var name = sib.nodeValue.trim();
 
                         if (name && name != "if" && name != "for" && name != "else" && name != "else if" && 
-                            name != "switch" && name != "while" && name != "catch" &&
+                            name != "switch" && name != "while" && name != "catch" && name.indexOf("case ") !== 0 &&
                             name.indexOf(",") == -1 && name.trim() !== "function") {
                             
                             var lineNum = child.attributes ? parseInt(child.getAttribute("linenum")) : 0;
@@ -271,8 +276,6 @@ define(function (require, exports, module) {
 
         var elements = getElements(text);
         
-        console.log(elements);
-
         getNamedBlocks(elements, results);
 
         return results;
