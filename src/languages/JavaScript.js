@@ -1,6 +1,6 @@
 define(function (require, exports, module) {
     "use strict";
-
+    
     var unnamedPlaceholder = "function";
 
     function _getVisibilityClass (name, isGenerator, isPrivate, isImport) {
@@ -35,13 +35,28 @@ define(function (require, exports, module) {
 
         if (displayName.indexOf("class ") != -1) {
             displayName = "<strong>" + displayName.split("class ")[1].split(" extends")[0] + "</strong>";
-            prefix = prefix;
             isGenerator = true;
         } else if (depth <= 2 && name.indexOf("export ") == -1) {
             isPrivate = true;
         }
+        
+        if (displayName.indexOf("var ") === 0 || displayName.indexOf("let ") === 0) {
+            displayName = displayName.slice(4);
+        }
+        
+        if (displayName.indexOf("=function") != -1) {
+            displayName = displayName.split("=function").join("");
+        }
+        
+        if (displayName.indexOf("= function") != -1) {
+            displayName = displayName.split("= function").join("");
+        }
+        
+        if (displayName.indexOf("function") != -1) {
+            displayName = displayName.split("function").join("");
+        } 
 
-        displayName = prefix + displayName;
+        displayName = prefix + displayName.trim();
 
         var $elements = [];
         var $name = $(document.createElement("span"));
@@ -63,23 +78,56 @@ define(function (require, exports, module) {
         };
     }
 
-    function _surroundArgs (args) {
-        if (args[0] !== "(") {
-            args = "(" + args + ")";
-        }
-        return args;
-    }
-
     function getElements (text) {
 
-        text = text.replace(/</g,"&lt;").replace(/>/g,"&gt;");
+        text = text.replace(/</g,"&lt").replace(/>/g,"&gt");
+        text = text.replace(/;/g,"<br />");
+        text = text.replace(/&lt/g,"&lt;").replace(/&gt/g,"&gt;");
 
         var lines = text.split("\n");
-        var i;
+        var i, j, qscope;
 
         for (i = 0; i < lines.length; i++) {
-            var line = lines[i].replace(/{/g,"<block linenum=\"" + i + "\" linelen=\"" + lines[i].length + "\">");
+            
+            var line = lines[i];
+            
+            line = line.replace("\\\"", "&quot;");
+            line = line.replace("\\'", "&quot;");
+            
+            if (line.indexOf("\"") != -1 || line.indexOf("'") != -1) {
+                
+                qscope = 0;
+                
+                j = line.length;
+                
+                while (j--) {
+                    var c = line.charAt(j);
+                    if (c == "'") {
+                        if (qscope === 0) {
+                            qscope = 1;
+                            line = line.slice(0, j) + "</quote>" + line.slice(j + 1);
+                        } else if (qscope === 1) {
+                            qscope = 0;
+                            line = line.slice(0, j) + "<quote>" + line.slice(j + 1);
+                        }
+                    } else if (c == "\"") {
+                        if (qscope === 0) {
+                            qscope = 2;
+                            line = line.slice(0, j) + "</quote>" + line.slice(j + 1);
+                        } else if (qscope === 2) {
+                            qscope = 0;
+                            line = line.slice(0, j) + "<quote>" + line.slice(j + 1);
+                        }
+                    }
+                }
+                
+                lines[i] = line;
+                
+            }
+            
+            line = line.replace(/{/g,"<block linenum=\"" + i + "\" linelen=\"" + lines[i].length + "\">");
             lines[i] = line.trim();
+            
         }
 
         i = lines.length;
@@ -93,10 +141,9 @@ define(function (require, exports, module) {
         text = text.replace(/}/g,"</block>");
         text = text.replace(/\(/g,"<scope>").replace(/\)/g,"</scope>");
         text = text.replace(/\/\*/g,"<commentblock>").replace(/\/\*/g,"</commentblock>");
-        text = text.replace(/;/g,"<br />");
         text = text.replace(/\t/g, "");
-
-
+    
+        console.log(text);
         var div = document.createElement("div");
         div.innerHTML = "<block>" + text + "</block>";
 
@@ -118,19 +165,29 @@ define(function (require, exports, module) {
 
             if (child.nodeName == "BLOCK") {
 
+                console.log(child.getAttribute("linenum"));
                 var sib = child.previousSibling;
                 var foundScope = false;
 
                 while (sib) {
 
                     if (sib.nodeType == 3 && sib.nodeValue.indexOf("class ") != -1) {
+                        
                         foundScope = true;
+                        
+                    } else if (sib.nodeType == 3 && sib.nodeValue.trim() == "=>") {
+                        
+                        break;
+                        
                     } else if (sib.nodeName == "SCOPE") {
+                        
                         foundScope = true;
                         sib = sib.previousSibling;
+                        
                         continue;
+                        
                     }
-
+                    
                     if (foundScope && sib.nodeType == 3 && sib.nodeValue.trim()) {
 
                         var args = [];
@@ -144,7 +201,10 @@ define(function (require, exports, module) {
 
                         var name = sib.nodeValue.trim();
 
-                        if (name && name != "if" && name != "for" && name != "else" && name != "else if" && name != "switch" && name != "while" && name != "catch") {
+                        if (name && name != "if" && name != "for" && name != "else" && name != "else if" && 
+                            name != "switch" && name != "while" && name != "catch" &&
+                            name.indexOf(",") == -1 && name.trim() !== "function") {
+                            
                             var lineNum = child.attributes ? parseInt(child.getAttribute("linenum")) : 0;
                             var lineLen = child.attributes ? parseInt(child.getAttribute("linelen")) : 0;
                             var depth = 0;
@@ -169,6 +229,10 @@ define(function (require, exports, module) {
 
                 getNamedBlocks(child, results);
 
+            } else if (child.nodeName == "SCOPE") {
+                
+                getNamedBlocks(child, results);
+                
             }
 
         }
@@ -206,6 +270,8 @@ define(function (require, exports, module) {
         var results = getImports(text);
 
         var elements = getElements(text);
+        
+        console.log(elements);
 
         getNamedBlocks(elements, results);
 
