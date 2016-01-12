@@ -158,9 +158,17 @@
     font-family: sans-serif;
 }
 
+.outline-entry-js-module {
+    color: #999;
+}
+.outline-entry-js-module:before {
+    color: #999;
+    content: "\f318";
+}
+
 .outline-entry-js-import:before {
     color: #f4229b;
-    content: "\f10f";
+    content: "\f2f8";
 }
 
 .outline-entry-js.outline-entry-generator {

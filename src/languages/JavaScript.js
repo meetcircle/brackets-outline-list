@@ -3,7 +3,7 @@ define(function (require, exports, module) {
     
     var unnamedPlaceholder = "function";
 
-    function _getVisibilityClass (name, isGenerator, isPrivate, isImport) {
+    function _getVisibilityClass (name, isGenerator, isPrivate, isImport, args) {
         var visClass = "";
         if (isGenerator) {
             visClass = " outline-entry-generator";
@@ -16,7 +16,11 @@ define(function (require, exports, module) {
         }
 
         if (isImport) {
-            visClass = " outline-entry-js-import";
+            if (args && args.indexOf("/") == -1) {
+                visClass = " outline-entry-js-module";
+            } else {
+                visClass = " outline-entry-js-import";
+            }
         }
 
         return visClass;
@@ -24,6 +28,7 @@ define(function (require, exports, module) {
 
     function _createListEntry (name, isGenerator, args, line, ch, depth, isPrivate, isImport) {
 
+        name = name || '';
         depth = depth || 0;
 
         var prefix = "";
@@ -72,7 +77,7 @@ define(function (require, exports, module) {
             name: displayName,
             line: line,
             ch: ch,
-            classes: "outline-entry-js outline-entry-icon" + _getVisibilityClass(name, isGenerator, isPrivate, isImport),
+            classes: "outline-entry-js outline-entry-icon" + _getVisibilityClass(name, isGenerator, isPrivate, isImport, args),
             $html: $elements,
             args: args
         };
@@ -255,15 +260,30 @@ define(function (require, exports, module) {
         for (var i = 0; i < lines.length; i++) {
 
             var line = lines[i].trim();
+            line = line.replace(/\"=require\(/g, "");
+            var name, file;
 
             if (line.indexOf("import ") === 0) {
 
-                var name = line.split("import")[1].split(" from")[0].trim();
-                var file = " (" + line.split("'").join(" ").split("from ")[1].trim() + ")";
+                name = line.split("import")[1].split(" from")[0].trim();
+                file = " (" + line.split("'").join(" ").split("from ")[1].trim() + ")";
                 file = file.replace(";","");
 
                 results.push(_createListEntry(name, false, file, i, lines[i].length, 0, false, true));
 
+            } else if (line.split(" ").join("").indexOf("=require(") != -1) {
+                
+                try {
+                    if (line.indexOf('var ') != -1) name = line.split('=')[0].split('var ')[1].trim();
+                    else if (line.indexOf('let ') != -1) name = line.split('=')[0].split('let ')[1].trim();
+                } catch (err) {
+                    console.log("Name parse error", err);
+                    name = '';
+                }
+                file = " (" + line.split("'").join('"').split(" ").join("").split("require(\"")[1].split("\")")[0] + ")";
+                
+                results.push(_createListEntry(name, false, file, i, lines[i].length, 0, false, true));
+                
             }
 
         }
