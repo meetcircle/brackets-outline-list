@@ -79,7 +79,8 @@ define(function (require, exports, module) {
             ch: ch,
             classes: "outline-entry-js outline-entry-icon" + _getVisibilityClass(name, isGenerator, isPrivate, isImport, args),
             $html: $elements,
-            args: args
+            args: args,
+            depth: depth
         };
     }
 
@@ -260,7 +261,7 @@ define(function (require, exports, module) {
         for (var i = 0; i < lines.length; i++) {
 
             var line = lines[i].trim();
-            line = line.replace(/\"=require\(/g, "");
+            line = line.replace(/\"require\(/g, "");
             var name, file;
 
             if (line.indexOf("import ") === 0) {
@@ -271,7 +272,7 @@ define(function (require, exports, module) {
 
                 results.push(_createListEntry(name, false, file, i, lines[i].length, 0, false, true));
 
-            } else if (line.split(" ").join("").indexOf("=require(") != -1) {
+            } else if (line.split(" ").join("").indexOf("require(") != -1) {
                 
                 try {
                     if (line.indexOf('var ') != -1) name = line.split('=')[0].split('var ')[1].trim();
@@ -299,10 +300,27 @@ define(function (require, exports, module) {
         var elements = getElements(text);
         
         getNamedBlocks(elements, results);
+        
+        var modules = [];
+        var i = results.length;
+        
+        while (i--) {
+         
+            if (results[i] && results[i].classes && results[i].classes.indexOf('module') != -1) {
+                modules.push(results.splice(i, 1)[0]);
+            }
+            
+        }
+        
+        if (modules.length) {
+            results = modules.concat(results);
+            console.log(results);
+        }
 
         return results;
 
     }
+    
 
     function compare(a, b) {
         if (b.name === unnamedPlaceholder) {
