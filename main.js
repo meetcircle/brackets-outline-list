@@ -5,7 +5,6 @@ define(function (require, exports, module) {
     var Commands       = brackets.getModule("command/Commands");
     var Menus           = brackets.getModule("command/Menus");
     var DocumentManager = brackets.getModule("document/DocumentManager");
-    var ProjectManager = brackets.getModule("project/ProjectManager");
     var EditorManager   = brackets.getModule("editor/EditorManager");
     var Resizer         = brackets.getModule("utils/Resizer");
     var AppInit         = brackets.getModule("utils/AppInit");
@@ -38,8 +37,37 @@ define(function (require, exports, module) {
     };
     
     var fileHistory = [];
+    
+    function getAbsolutePath (basePath, relativePath) {
+        
+        basePath += "/";
+        basePath = basePath.split("//").join("/");
+        
+        var baseParts = basePath.trim().split("/"),
+            relParts = relativePath.trim().split("/");
+         
+        baseParts.pop();
+        
+        for (var i = 0; i < relParts.length; i++) {
+            
+            if (relParts[i] == ".") {
+                continue;
+            }
+            
+            if (relParts[i] == "..") {
+                baseParts.pop();
+            } else {
+                baseParts.push(relParts[i]);
+            }
+            
+        }
+        
+        return baseParts.join("/");
+        
+    }
 
     function getOutline() {
+        
         var $outline = Mustache.render(ListTemplate, {
             Strings: Strings
         });
@@ -53,12 +81,15 @@ define(function (require, exports, module) {
             });
         });
         return $outline;
+        
     }
 
     function goToLine(event) {
+        
         var currentEditor = EditorManager.getActiveEditor();
         currentEditor.setCursorPos(event.data.line, event.data.ch, true);
         currentEditor.focus();
+        
     }
 
     function loadFile(event) {
@@ -70,17 +101,7 @@ define(function (require, exports, module) {
             file = file.trim();
             var absFile = '';
 
-            if (file.indexOf("/") == -1) {
-
-                var baseDir = ProjectManager.getProjectRoot();
-
-                file = "node_modules/" + file + "/";
-                absFile = baseDir.fullPath + file;
-
-                CommandManager.execute(Commands.FILE_OPEN_FOLDER, absFile);
-
-
-            } else {
+            if (file.indexOf("/") != -1) {
 
                 var doc = DocumentManager.getCurrentDocument();
 
@@ -88,12 +109,12 @@ define(function (require, exports, module) {
 
                     var f = doc.file;
 
-                    absFile = f._parentPath + file;
+                    absFile = getAbsolutePath(f._parentPath, file);
 
                     if (absFile.indexOf(".js") == -1) absFile += ".js";
                     
                     fileHistory.push(f.fullPath);
-
+                    
                     CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN, {fullPath: absFile, paneId: "first-pane"});
 
                 }
@@ -107,6 +128,7 @@ define(function (require, exports, module) {
         if (fileHistory.length) {
             
             var fullPath = fileHistory.pop();
+            
             CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN, {fullPath: fullPath, paneId: "first-pane"});
             
         }
@@ -114,6 +136,7 @@ define(function (require, exports, module) {
     }
 
     function updateOutline() {
+        
         var doc = DocumentManager.getCurrentDocument();
         if (!doc) {
             hideOutline();
@@ -163,6 +186,7 @@ define(function (require, exports, module) {
 
             $("#outline-list ul").append($entry);
         });
+        
     }
 
     function onResize() {
