@@ -36,6 +36,8 @@ define(function (require, exports, module) {
         SVG:                    require("src/languages/XML"),
         Jade:                   require("src/languages/Jade")
     };
+    
+    var fileHistory = [];
 
     function getOutline() {
         var $outline = Mustache.render(ListTemplate, {
@@ -89,6 +91,8 @@ define(function (require, exports, module) {
                     absFile = f._parentPath + file;
 
                     if (absFile.indexOf(".js") == -1) absFile += ".js";
+                    
+                    fileHistory.push(f.fullPath);
 
                     CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN, {fullPath: absFile, paneId: "first-pane"});
 
@@ -96,6 +100,17 @@ define(function (require, exports, module) {
             }
 
         }
+    }
+    
+    function historyBack() {
+        
+        if (fileHistory.length) {
+            
+            var fullPath = fileHistory.pop();
+            CommandManager.execute(Commands.CMD_ADD_TO_WORKINGSET_AND_OPEN, {fullPath: fullPath, paneId: "first-pane"});
+            
+        }
+        
     }
 
     function updateOutline() {
@@ -112,15 +127,25 @@ define(function (require, exports, module) {
         }
 
         showOutline();
-
+        
+        var $entry;
+        
+        if (fileHistory.length) {
+            $entry = $(document.createElement("li"));
+            $entry.addClass("outline-history");
+            $entry.html('&laquo; back');
+            $entry.click({}, historyBack);
+            $("#outline-list ul").append($entry);
+        }
+        
         var list = lang.getOutlineList(doc.getText(), prefs.get("args"), prefs.get("unnamed"));
-
+        
         if (prefs.get("sort") && lang.compare) {
             list.sort(lang.compare);
         }
 
         list.forEach(function (entry) {
-            var $entry = $(document.createElement("li"));
+            $entry = $(document.createElement("li"));
             $entry.addClass("outline-entry");
             $entry.addClass(entry.classes);
             $entry.append(entry.$html);

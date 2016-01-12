@@ -78,6 +78,15 @@
     right: 4px;
 }
 
+.outline-history {
+    padding-left: 27px;
+    line-height: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.125);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.125);
+    margin: 0 0 8px 0;
+    
+}
+
 #outline-list {
     height: 100%;
     overflow: auto;
